@@ -19,7 +19,7 @@ $(function () {
 
     let username, room = getRoom()
     let connected = false;
-    let $currentInput = $usernameInput //.focus();
+    let $currentInput = $usernameInput
     let manolos = {};
     let bluered;
     let num_mens = 0;
@@ -124,11 +124,8 @@ $(function () {
         $messages[0].scrollTop = $messages[0].scrollHeight
     }
 
-    let getTypingMessages = data => {
-        return $('.typing.message').filter(i => {
-            return $(this).data('username') === data.username
-        });
-    }
+    let getTypingMessages = data => $('.typing.message')
+            .filter(i => $(this).data('username') === data.username)
 
     let getUsernameColor = username => {
         let hash = 7
@@ -144,10 +141,9 @@ $(function () {
         $users.prepend($el)
         $users[0].scrollTop = $users[0].scrollHeight
     }
-
     $window.on("blur focus", e => {
 
-        let prevType = $(this).data("prevType");
+        let prevType = $(this).data("prevType")
         if (prevType != e.type) {
             switch (e.type) {
                 case "blur":
@@ -156,12 +152,12 @@ $(function () {
                 case "focus":
                     bluered = false;
                     $title.empty();
-                    $title.prepend(((room) ? room : 'Chat'));
+                    $title.prepend(((room) ? room : 'Chat'))
                     num_mens = 0;
                     break;
             }
         }
-        $(this).data("prevType", e.type);
+        $(this).data("prevType", e.type)
     })
 
     $window.keydown(event => {
@@ -181,15 +177,11 @@ $(function () {
         } else if (username) {
             socket.emit('blink', username)
         }
-    });
-
-    $loginPage.click(() => {
-        $currentInput.focus();
-    });
-
-    $inputMessage.click(() => {
-        $inputMessage.focus();
     })
+
+    $loginPage.click(() => $currentInput.focus())
+
+    $inputMessage.click(() => $inputMessage.focus())
 
     socket.on('login', data => {
         $loginPage.fadeOut();
@@ -209,10 +201,8 @@ $(function () {
     });
 
     socket.on('new message', data => {
-        if (data.room == room) {
-            addChatMessage(data);
-        }
-    });
+        if (data.room == room) addChatMessage(data)
+    })
 
     socket.on('display room', chats => {
         if (chats) chats.forEach(chat => addChatMessage(chat))
@@ -220,26 +210,24 @@ $(function () {
 
     socket.on('refresh users', data => {
         if (data.room == room) {
-            manolos = data.users;
-            $users.empty();
+            manolos = data.users
+            $users.empty()
             if (manolos) {
-                manolos.forEach((m, i) => {
+                manolos.forEach(m => {
                     let $el = $('<li>')
                         .text(m)
                         .addClass(m)
                         .css('color', getUsernameColor(m))
                     addUserElement($el)
-                });
+                })
             }
         }
     });
 
-    socket.on('log', data => {
-        log(data);
-    });
+    socket.on('log', data => log(data))
 
     socket.on('blink', data => {
-        $('.' + data).css("opacity", "0");
-        setTimeout(() => { $('.' + data).css("opacity", "1"); }, 50);
+        $('.' + data).css("opacity", "0")
+        setTimeout(() => { $('.' + data).css("opacity", "1"); }, 50)
     })
 });
