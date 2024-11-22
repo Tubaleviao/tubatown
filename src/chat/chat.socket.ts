@@ -6,16 +6,15 @@ import {
     OnGatewayConnection,
     OnGatewayDisconnect
 } from "@nestjs/websockets"
-import { AppService } from "src/app.service"
+import { ChatService } from "./chat.service"
 const usernames = []
 
-@WebSocketGateway(undefined, { namespace: 'chat' })
-export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
+@WebSocketGateway({ namespace: 'chat' })
+export class SocketChatGateway implements OnGatewayDisconnect {
     constructor(
-        private readonly appService: AppService,
+        private readonly chatService: ChatService,
       ) {}
     addedUser = false
-    handleConnection(socket: any, ...args: any[]) {}
     handleDisconnect(socket: any) {
         console.log(`${socket.username} disconnected.`)
         let room_json;
@@ -66,7 +65,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
                 }
             }
             this.addedUser = true
-            roomJson.chats = await this.appService.getChats(user_room)
+            roomJson.chats = await this.chatService.getChats(user_room)
             socket.emit('login', {})
             socket.emit('refresh users', roomJson)
             socket.emit('display room', roomJson.chats)
@@ -91,7 +90,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
         socket.broadcast.emit('new message', resp);
         socket.emit('new message', resp)
         if (resp.room) {
-            await this.appService.saveChat(resp)
+            await this.chatService.saveChat(resp)
         }
     }
 

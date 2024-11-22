@@ -24,7 +24,7 @@ $(function () {
     let bluered;
     let num_mens = 0;
 
-    let socket = io('/')
+    let socket = io('/chat')
 
     let setUsername = user => {
         username = user
