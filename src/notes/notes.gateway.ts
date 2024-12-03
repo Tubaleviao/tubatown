@@ -1,9 +1,15 @@
 import { SubscribeMessage, WebSocketGateway } from '@nestjs/websockets';
+import { NotesService } from './notes.service';
 
-@WebSocketGateway()
+@WebSocketGateway({ namespace: 'notes' })
 export class NotesGateway {
-  @SubscribeMessage('message')
-  handleMessage(client: any, payload: any): string {
-    return 'Hello world!';
+
+  constructor(
+    private readonly notesService: NotesService,
+  ) {}
+
+  @SubscribeMessage('save')
+  async saveNote(client: any, payload: any): Promise<void> {
+    client.emit('saved', await this.notesService.saveNote(payload))
   }
 }

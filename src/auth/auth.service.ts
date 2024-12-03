@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { EnvironmentService } from 'src/environment/environment.service'
-import * as bcrypt from 'bcrypt'
 import { User } from '@prisma/client'
 
 type GenerateJwtProps = {

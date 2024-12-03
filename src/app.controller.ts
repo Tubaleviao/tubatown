@@ -1,11 +1,13 @@
-import { Body, Controller, Get, Param, Post, Render, UseGuards, Req, Response } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Render, UseGuards, Req, Response, UseInterceptors, Session } from '@nestjs/common';
 import { AppService } from './app.service';
 import { AuthGuard } from './auth/auth.guard';
 import { LoginDto, SignupDto } from './dtos/signup.dto'
 import { AuthService } from './auth/auth.service'
 import * as bcrypt from 'bcrypt'
 import { Request, Response as Res } from 'express'
-import { SessionUser } from './interfaces/user.interface';
+import { UserDto } from './dtos/user.dto';
+import { SerializeInterceptor } from './interceptors/serialize.interceptor';
+import { UserSession } from './decorators/user.decorator';
 
 @Controller()
 export class AppController {
@@ -14,16 +16,21 @@ export class AppController {
   constructor(private readonly appService: AppService, private authService: AuthService) { }
 
   @Get()
-  getHome(@Req() req: Request & SessionUser, @Response() res: Res): void {
-    if(req.session.user) res.redirect("dashboard")
+  getHome(@UserSession() user: any, @Response() res: Res): void {
+    if(user.user) res.redirect("dashboard")
     else res.render('home', { title: 'Home', ip: '0'})
+  }
+  @Get('users/:id')
+  @UseInterceptors(SerializeInterceptor)
+  getUser(@Param('id') id): Promise<UserDto> {
+    return this.appService.getUser(id)
   }
 
   @Get('dashboard')
   @UseGuards(AuthGuard)
   @Render('dashboard')
-  getDashboard(@Req() req: Request & SessionUser): object {
-    return { title: 'Dashboard', user: req.session.user, nav: this.nav  }
+  getDashboard(@Session() session: any): object {
+    return { title: 'Dashboard', user: session.user, nav: this.nav  }
   }
   
   @Post('signup')
@@ -38,7 +45,8 @@ export class AppController {
   async login(
         @Body() loginDto: LoginDto, 
         @Response() res: Res, 
-        @Req() req: Request & SessionUser
+        @Req() req: Request,
+        @Session() session,
       ): Promise<void> {
     let { password, username } = loginDto
     let databaseUser = await this.appService.getUser(username)
@@ -46,11 +54,11 @@ export class AppController {
       let passwordsMatch = await bcrypt.compare(password, databaseUser.password)
       if(passwordsMatch){
         let jwt = await this.authService.generateJwt(databaseUser)
-        req.session.user = username
-        req.session.email = databaseUser.email
-        req.session.permission = databaseUser.permission
-        req.session.verified = true
-        req.session.jwt = jwt.accessToken
+        session.user = username
+        session.email = databaseUser.email
+        session.permission = databaseUser.permission
+        session.verified = true
+        session.jwt = jwt.accessToken
         if (req.body.url == "/") res.redirect("dashboard")
         else res.redirect(req.body.url)
       }
